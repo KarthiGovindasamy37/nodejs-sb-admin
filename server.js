@@ -24,7 +24,7 @@ app.get("/users",function(req,res){
     let qparams=req.query
     let resUsers=[]
     for(let i=0;i<+req.query.limit;i++){
-      if(users[i]){
+      if(users[i]!= null){
       resUsers.push(users[i])
 
     }
