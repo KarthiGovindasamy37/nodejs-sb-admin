@@ -28,8 +28,9 @@ app.get("/users",function(req,res){
       resUsers.push(users[i])
 
     }
-    res.json(resUsers)
   }
+    res.json(resUsers)
+  
 })
 
 app.get("/user/:id",function(req,res){
