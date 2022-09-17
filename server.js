@@ -24,10 +24,12 @@ app.get("/users",function(req,res){
     let qparams=req.query
     let resUsers=[]
     for(let i=0;i<req.query.limit;i++){
+      if(users[i]){
       resUsers.push(users[i])
 
     }
     res.json(resUsers)
+  }
 })
 
 app.get("/user/:id",function(req,res){
