@@ -46,7 +46,7 @@ app.get("/users",async function(req,res){
 
   let db=connection.db(DB)
 
-  let users=await db.collection("users").find().toArray()
+  let users=await db.collection("user").find().toArray()
 
   await  connection.close()
 
