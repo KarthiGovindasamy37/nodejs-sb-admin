@@ -4,6 +4,7 @@ const cors=require("cors")
 const mongodb=require("mongodb")
 const mongoClient=mongodb.mongoClient
 const dotenv=require("dotenv").config()
+const bcrypt=require("bcryptjs")
 let DB="users_products"
 let URL=process.env.URL
 
@@ -143,6 +144,53 @@ app.delete("/user/:id",async function(req,res){
   // }
 })
 
+app.post("/register",async function(req,res){
+
+  try {
+    let connection=await mongoClient.connect(URL);
+
+  let db=connection.db(DB);
+
+  let salt=await bcrypt.genSalt(10);
+
+  let hash=await bcrypt.hash(req.body.password,salt);
+
+  req.body.password=hash;
+
+  await db.collection("products").insertOne(req.body);
+
+  await connection.close();
+
+  res.send("registered")
+  } catch (error) {
+    res.status(500).send("something wrong")
+  }
+})
+
+app.post("/login",async function(req,res){
+
+ try {
+  let connection=await mongoClient.connect(URL);
+
+  let db=connection.db(DB);
+
+  let user=await db.collection("products").findOne({email:req.body.email});
+  
+  if(user){
+  let compare=await bcrypt.compare(req.body.password,user.password);
+
+  if(compare){
+    res.send("Logged in successfully");
+  }else{
+    res.send("email/Password incorrect");
+  }
+  }else{
+    res.status(401).json({message:"email/password incorrect"});
+  }
+ } catch (error) {
+  res.status(500).send("something wrong")
+ }
+})
 
 
 app.listen(process.env.PORT || 3000)
