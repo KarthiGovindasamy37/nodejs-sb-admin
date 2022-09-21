@@ -207,7 +207,7 @@ app.post("/login",async function(req,res){
     res.status(401).json({message:"email or password incorrect"});
   }
  } catch (error) {
-  res.status(500).send("something wrong")
+  res.status(500).json(message:"something wrong")
  }
 })
 
