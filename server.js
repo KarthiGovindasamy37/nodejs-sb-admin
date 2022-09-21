@@ -2,7 +2,7 @@ const express=require("express")
 const app=express()
 const cors=require("cors")
 const mongodb=require("mongodb")
-const mongoClient=mongodb.mongoClient
+const mongoClient=mongodb.MongoClient
 const dotenv=require("dotenv").config()
 const bcrypt=require("bcryptjs")
 let DB="users_products"
@@ -12,7 +12,7 @@ let users=[];
 
 app.use(express.json());
 app.use(cors({
-   origin:"http://localhost:3000"
+   origin:"http://localhost:3001"
 }))
 
 app.get("/home",function(req,res){
@@ -147,7 +147,7 @@ app.delete("/user/:id",async function(req,res){
 app.post("/register",async function(req,res){
 
   try {
-    let connection=await mongoClient.connect(URL);
+    let connection= await mongoClient.connect(URL);
 
   let db=connection.db(DB);
 
@@ -159,12 +159,13 @@ app.post("/register",async function(req,res){
 
   await db.collection("products").insertOne(req.body);
 
-  await connection.close();
+  await connection.close();                       
 
   res.send("registered")
-  } catch (error) {
+  } catch (error) { 
+    console.log(error);                                            
     res.status(500).send("something wrong")
-  }
+  } 
 })
 
 app.post("/login",async function(req,res){
