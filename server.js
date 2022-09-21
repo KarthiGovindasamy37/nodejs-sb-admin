@@ -5,6 +5,7 @@ const mongodb=require("mongodb")
 const mongoClient=mongodb.MongoClient
 const dotenv=require("dotenv").config()
 const bcrypt=require("bcryptjs")
+const jwt=require("jsonwebtoken")
 let DB="users_products"
 let URL=process.env.URL
 
@@ -15,11 +16,27 @@ app.use(cors({
    origin:"http://localhost:3001"
 }))
 
-app.get("/home",function(req,res){
+let authenticate=(req,res,next)=>{
+if(req.headers.authorization){
+  try {
+    let decode=jwt.verify(req.headers.authorization,process.env.SECRET)
+    if(decode){
+      next()
+    }
+  } catch (error) {
+    res.status(401).json({message:"unauthorised"})
+  }
+ 
+}else{
+  res.status(401).json({message:"unauthorised"})
+}
+}
+
+app.get("/home",authenticate,function(req,res){
     res.json({"message":"You're home..."})
 })
 
-app.post("/user",async function(req,res){
+app.post("/user",authenticate,async function(req,res){
 
  try {
   let connection= await mongoClient.connect(URL)
@@ -40,7 +57,7 @@ app.post("/user",async function(req,res){
 
 })
 
-app.get("/users",async function(req,res){
+app.get("/users",authenticate,async function(req,res){
 
  try {
   let connection=await mongoClient.connect(URL)
@@ -67,7 +84,7 @@ app.get("/users",async function(req,res){
   
 })
 
-app.get("/user/:id",async function(req,res){
+app.get("/user/:id",authenticate,async function(req,res){
 
   try {
   let connection=await mongoClient.connect(URL);
@@ -91,7 +108,7 @@ app.get("/user/:id",async function(req,res){
   // }
 })
 
-app.put("/user/:id",async function(req,res){
+app.put("/user/:id",authenticate,async function(req,res){
 
   try {
     let connection= await mongoClient.connect(URL);
@@ -119,7 +136,7 @@ app.put("/user/:id",async function(req,res){
     // }
 })
 
-app.delete("/user/:id",async function(req,res){
+app.delete("/user/:id",authenticate,async function(req,res){
 
   try {
   let connection=await mongoClient.connect(URL);
@@ -157,7 +174,7 @@ app.post("/register",async function(req,res){
 
   req.body.password=hash;
 
-  await db.collection("products").insertOne(req.body);
+  await db.collection("Auth users").insertOne(req.body);
 
   await connection.close();                       
 
@@ -175,18 +192,19 @@ app.post("/login",async function(req,res){
 
   let db=connection.db(DB);
 
-  let user=await db.collection("products").findOne({email:req.body.email});
+  let user=await db.collection("Auth users").findOne({email:req.body.email});
   
   if(user){
   let compare=await bcrypt.compare(req.body.password,user.password);
 
   if(compare){
-    res.send("Logged in successfully");
+   let token=jwt.sign({_id:user._id},process.env.SECRET,{expiresIn:"1m"})
+   res.json({token})
   }else{
-    res.send("email/Password incorrect");
+    res.send("email or Password incorrect");
   }
   }else{
-    res.status(401).json({message:"email/password incorrect"});
+    res.status(401).json({message:"email or password incorrect"});
   }
  } catch (error) {
   res.status(500).send("something wrong")
